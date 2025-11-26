@@ -22,7 +22,5 @@ The V5 architecture maintains the core asynchronous Fan-Out pipeline but adds a 
 * Dispatch/Queue: Eventarc triggers the Dispatcher, which queues pages to Pub/Sub.
 * Worker (Dual Write): The Worker performs both:
 * Real-time Indexing: Writes Child Vectors to Firestore (rag_children).
-
-Archival Export: Writes all chunk data (including vectors) to a compressed Parquet file in GCS (/archive/{client_id}/).
-
-Retrieval: The Retrieval API queries Firestore for the live search and uses Gemini for generation with conversational memory.
+* Archival Export: Writes all chunk data (including vectors) to a compressed Parquet file in GCS (/archive/{client_id}/).
+* Retrieval: The Retrieval API queries Firestore for the live search and uses Gemini for generation with conversational memory.
