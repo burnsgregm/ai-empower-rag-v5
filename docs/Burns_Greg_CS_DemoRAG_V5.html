@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Case Study – Demo RAG V5 (AI Empower Enterprise RAG Service)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-elevated: #141a33;
+      --bg-soft: #171f3b;
+      --accent: #4fc3f7;
+      --accent-soft: rgba(79, 195, 247, 0.18);
+      --accent-strong: #00b0ff;
+      --text-main: #e3e7ff;
+      --text-soft: #a5acc7;
+      --text-muted: #7b82a6;
+      --border-subtle: #262c4a;
+      --pill-bg: #1e2748;
+      --success: #81c784;
+      --danger: #ff8a65;
+      --code-bg: #050814;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 16px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #151c3b 0, #050814 55%, #020309 100%);
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      background: radial-gradient(circle at top left, #1b2442 0, #0b1020 52%, #050814 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(110, 117, 170, 0.35);
+      box-shadow:
+        0 26px 60px rgba(5, 8, 20, 0.9),
+        0 0 0 1px rgba(79, 195, 247, 0.08);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 24px 32px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      background:
+        radial-gradient(circle at top left, rgba(79, 195, 247, 0.12), transparent 55%),
+        linear-gradient(to right, rgba(15, 23, 42, 0.96), rgba(8, 12, 26, 0.98));
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header h1 span.tag {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(129, 199, 132, 0.7);
+      color: var(--success);
+      background: rgba(46, 125, 50, 0.1);
+    }
+
+    header p.subtitle {
+      margin: 0;
+      font-size: 0.98rem;
+      color: var(--text-soft);
+    }
+
+    header .meta-row {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--pill-bg);
+      border: 1px solid rgba(79, 195, 247, 0.3);
+      color: var(--text-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill strong {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+      gap: 0;
+    }
+
+    aside {
+      padding: 20px 22px 24px;
+      border-right: 1px solid var(--border-subtle);
+      background: radial-gradient(circle at top, #151a30 0, #0c1224 55%, #070b17 100%);
+    }
+
+    main {
+      padding: 22px 28px 26px;
+    }
+
+    h2 {
+      margin-top: 18px;
+      margin-bottom: 8px;
+      font-size: 1.15rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-strong);
+    }
+
+    h3 {
+      margin-top: 16px;
+      margin-bottom: 6px;
+      font-size: 1.02rem;
+      color: var(--text-main);
+    }
+
+    p {
+      margin: 6px 0 8px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: var(--text-soft);
+    }
+
+    ul {
+      margin: 4px 0 10px 18px;
+      padding-left: 0;
+    }
+
+    ul li {
+      margin: 3px 0;
+      font-size: 0.9rem;
+      color: var(--text-soft);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .sidebar-section {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed rgba(92, 99, 155, 0.7);
+    }
+
+    .sidebar-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+
+    .sidebar-title {
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .sidebar-kv {
+      font-size: 0.9rem;
+      margin: 2px 0;
+      color: var(--text-soft);
+    }
+
+    .sidebar-kv span.label {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-right: 4px;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .badge {
+      font-size: 0.78rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+
+    .badge.highlight {
+      border-color: rgba(79, 195, 247, 0.8);
+      color: var(--accent);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .callout {
+      margin: 10px 0 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: linear-gradient(
+        135deg,
+        rgba(79, 195, 247, 0.08),
+        rgba(21, 24, 45, 0.96)
+      );
+      border: 1px solid rgba(79, 195, 247, 0.55);
+      font-size: 0.88rem;
+      color: var(--text-soft);
+    }
+
+    .callout strong {
+      color: var(--accent);
+    }
+
+    .kpi-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .kpi {
+      flex: 1 1 110px;
+      min-width: 110px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: radial-gradient(circle at top left, rgba(79, 195, 247, 0.16), #050814 65%);
+      border: 1px solid rgba(79, 195, 247, 0.45);
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .kpi-value {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .kpi-note {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    .section-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 4px 0 10px;
+    }
+
+    .section-chip {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: var(--text-muted);
+    }
+
+    .section-chip strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .arch-diagram {
+      margin: 10px 0 14px;
+      padding: 10px 10px 8px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(3, 7, 18, 0.98));
+      border: 1px solid rgba(79, 195, 247, 0.35);
+    }
+
+    .arch-diagram img {
+      display: block;
+      width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #020617;
+    }
+
+    .arch-diagram figcaption {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    code {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.82rem;
+      background: var(--code-bg);
+      border-radius: 4px;
+      padding: 1px 4px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      aside {
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      main {
+        padding: 18px 18px 22px;
+      }
+      header {
+        padding: 20px 18px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>
+        Demo RAG V5 – Enterprise RAG Service
+        <span class="tag">Case Study</span>
+      </h1>
+      <p class="subtitle">
+        AI Empower Enterprise Retrieval-Augmented Generation (RAG) Service – V5 Storage Decoupling
+        release, with a live Streamlit demo layered on top of an asynchronous GCP fan-out
+        architecture.
+      </p>
+      <div class="meta-row">
+        <span class="pill"><strong>Role</strong> Architect & Lead Engineer</span>
+        <span class="pill"><strong>Domain</strong> Enterprise RAG / GCP</span>
+        <span class="pill"><strong>Stack</strong> GCP · Firestore Vector Search · Vertex AI · Streamlit · Terraform</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside>
+        <div class="sidebar-section">
+          <div class="sidebar-title">Project Snapshot</div>
+          <div class="sidebar-kv">
+            <span class="label">Type</span> Enterprise RAG backend + demo UI
+          </div>
+          <div class="sidebar-kv">
+            <span class="label">Version</span> V5 – Storage Decoupling
+          </div>
+          <div class="sidebar-kv">
+            <span class="label">Client</span> AI Empower (medical education)
+          </div>
+          <div class="badge-row" style="margin-top: 6px;">
+            <span class="badge highlight">Async Fan-Out Pipeline</span>
+            <span class="badge">Parent–Child Indexing</span>
+            <span class="badge">Firestore Vector Search</span>
+            <span class="badge">Dual-Write: Firestore + Parquet</span>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-title">Links</div>
+          <div class="sidebar-kv">
+            <span class="label">GitHub</span>
+            <a href="https://github.com/burnsgregm/ai-empower-rag-v5" target="_blank" rel="noopener">
+              github.com/burnsgregm/ai-empower-rag-v5
+            </a>
+          </div>
+          <div class="sidebar-kv">
+            <span class="label">Live Demo</span>
+            <a href="https://demo-rag-v5.streamlit.app/" target="_blank" rel="noopener">
+              demo-rag-v5.streamlit.app
+            </a>
+          </div>
+          <div class="sidebar-kv">
+            <span class="label">1-Pager</span>
+            <a href="Burns_Greg_CS_1P_DemoRAG_V5.pdf" target="_blank" rel="noopener">
+              Burns_Greg_CS_1P_DemoRAG_V5.pdf
+            </a>
+          </div>
+          <div class="sidebar-kv">
+            <span class="label">Diagram</span>
+            <a href="Burns_Greg_CS_DemoRAG_V5.svg" target="_blank" rel="noopener">
+              Burns_Greg_CS_DemoRAG_V5.svg
+            </a>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-title">Tech Stack</div>
+          <div class="badge-row">
+            <span class="badge">Python 3.11</span>
+            <span class="badge">FastAPI / Flask</span>
+            <span class="badge">Streamlit</span>
+            <span class="badge">Terraform</span>
+            <span class="badge">Cloud Run</span>
+            <span class="badge">Pub/Sub</span>
+            <span class="badge">GCS</span>
+            <span class="badge">Firestore Native + Vector</span>
+            <span class="badge">Vertex AI · Gemini 2.5 Pro</span>
+            <span class="badge">text-embedding-004</span>
+            <span class="badge">pandas / pyarrow</span>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-title">Key Outcomes</div>
+          <div class="kpi-row">
+            <div class="kpi">
+              <div class="kpi-label">Scale</div>
+              <div class="kpi-value">Textbook → Library Ready</div>
+              <div class="kpi-note">
+                V5 writes to Firestore for real-time and GCS Parquet for future vector index migration.
+              </div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Ingestion</div>
+              <div class="kpi-value">Async Fan-Out</div>
+              <div class="kpi-note">
+                GCS → Eventarc → Dispatcher → Pub/Sub → Worker at page-level granularity.
+              </div>
+            </div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi">
+              <div class="kpi-label">Retrieval</div>
+              <div class="kpi-value">Parent–Child RAG</div>
+              <div class="kpi-note">
+                Child vectors for precision; parent chunks for rich LLM context plus chat history.
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main>
+        <h2>Overview</h2>
+        <p>
+          Demo RAG V5 is the live, demo-friendly face of an enterprise Retrieval-Augmented
+          Generation service built for AI Empower, a medical education platform. Under the hood,
+          it runs a fully asynchronous GCP fan-out pipeline that can ingest textbook-scale PDF/PPTX
+          content, index it with a Parent–Child strategy in Firestore Vector Search, and serve
+          conversational answers backed by Gemini 2.5 Pro.
+        </p>
+        <p>
+          Version 5 introduces a critical architectural shift: <strong>storage decoupling</strong>. The ingestion
+          worker now performs a dual-write—persisting child vectors to Firestore for real-time search,
+          while simultaneously archiving all RAG data to Parquet in Cloud Storage. This prepares the
+          system for a V6 “Library Scale” upgrade where a dedicated vector engine (e.g., Vertex AI
+          Vector Search) can be layered in without re-ingesting the corpus.
+        </p>
+
+        <div class="section-chip-row">
+          <span class="section-chip"><strong>Users:</strong> medical students & faculty</span>
+          <span class="section-chip"><strong>Mode:</strong> multi-tenant RAG backend + Streamlit demo UI</span>
+          <span class="section-chip"><strong>Goal:</strong> accurate, explainable retrieval from large medical corpora</span>
+        </div>
+
+        <h2>Problem Context</h2>
+        <p>
+          Earlier versions of the platform (V2/V3) proved out the core RAG idea but hit scaling and
+          cost constraints:
+        </p>
+        <ul>
+          <li>
+            <strong>Large files timed out.</strong> Monolithic ingestion functions couldn’t reliably process
+            500+ page textbooks without hitting time or memory limits.
+          </li>
+          <li>
+            <strong>Storage costs would explode at “library” scale.</strong> Storing every vector exclusively in
+            Firestore would become cost-prohibitive as document counts grew into the hundreds of
+            thousands.
+          </li>
+          <li>
+            <strong>Tenants needed isolation and memory.</strong> Each institution’s data had to remain isolated,
+            and users expected follow-up questions to respect prior context.
+          </li>
+        </ul>
+        <p>
+          The mandate for V5 was clear: keep the real-time experience of V4’s Firestore Vector
+          Search, but quietly lay down the plumbing for a future storage and vector-engine flip
+          without breaking clients.
+        </p>
+
+        <h2>Solution Overview</h2>
+        <p>
+          The Enterprise RAG backend now runs as three containerized Cloud Run services plus a
+          Streamlit front-end:
+        </p>
+        <ul>
+          <li>
+            An <strong>ingestion dispatcher</strong> that fans out uploads into per-page Pub/Sub tasks and
+            scales horizontally.
+          </li>
+          <li>
+            A <strong>dual-write ingestion worker</strong> that performs Parent–Child chunking, generates
+            embeddings with <code>text-embedding-004</code>, writes to Firestore for search, and archives to
+            Parquet for future vector indexing.
+          </li>
+          <li>
+            A <strong>retrieval API</strong> that runs RAG with multi-tenant filters, conversational memory, and
+            Gemini 2.5 Pro for answer generation.
+          </li>
+          <li>
+            A <strong>Streamlit demo app</strong> that exposes file upload, tenant selection, and a chat interface,
+            wired into the same backend used in production.
+          </li>
+        </ul>
+
+        <div class="callout">
+          <strong>Design intent:</strong> V5 is intentionally conservative at the surface (same Firestore-based
+          semantics as V4) but aggressive behind the scenes, decoupling storage to unlock future
+          vector search engines without a painful migration.
+        </div>
+
+        <h2>Architecture</h2>
+        <p>
+          At a high level, Demo RAG V5 implements a serverless fan-out ingestion pipeline, a
+          Firestore-backed vector store with Parent–Child indexing, and a conversation-aware
+          retrieval API, all fronted by a multi-tenant Streamlit UI.
+        </p>
+
+        <figure class="arch-diagram">
+          <img src="Burns_Greg_CS_DemoRAG_V5.svg" alt="Demo RAG V5 architecture diagram" />
+          <figcaption>
+            Demo RAG V5 architecture: GCS uploads → Eventarc → Dispatcher → Pub/Sub → Dual-Write
+            Worker → Firestore Vector Search (real-time) + GCS Parquet archive (future vector
+            engine) → Retrieval API → Gemini 2.5 Pro → Streamlit demo.
+          </figcaption>
+        </figure>
+
+        <h3>Key Architecture Responsibilities</h3>
+        <ul>
+          <li>
+            <strong>Upload & Dispatch:</strong> Files are uploaded to GCS under a tenant-scoped path (e.g.,
+            <code>uploads/{client_id}/...</code>); Eventarc triggers the dispatcher, which inspects page counts
+            and publishes one Pub/Sub message per page.
+          </li>
+          <li>
+            <strong>Parent–Child Indexing:</strong> Workers split text into large “parent” chunks (~2000 chars)
+            for LLM context and smaller “child” chunks (~400 chars) for vector similarity search.
+          </li>
+          <li>
+            <strong>Vector Storage:</strong> Child chunks are embedded with <code>text-embedding-004</code> and
+            stored in Firestore as vector fields, filtered by <code>client_id</code> at query time.
+          </li>
+          <li>
+            <strong>Storage Decoupling (New in V5):</strong> The same worker writes a Parquet row per child
+            chunk into GCS, capturing embedding arrays, source, page, and timestamps for future
+            batch indexing jobs.
+          </li>
+          <li>
+            <strong>Retrieval & LLM Orchestration:</strong> The retrieval API runs a vector search on child
+            chunks, resolves the parents, merges that with the last four turns of chat history, and
+            passes the full context into Gemini 2.5 Pro.
+          </li>
+        </ul>
+
+        <h2>Demo Experience</h2>
+        <p>
+          The Demo RAG V5 Streamlit app is deliberately uncluttered: upload content, select a
+          tenant context, and start asking questions. Behind each query is the same RAG pipeline
+          that runs in the backend.
+        </p>
+
+        <figure class="arch-diagram">
+          <img src="Burns_Greg_CS_DemoRAG_V5_screen.png"
+               alt="Demo RAG V5 Streamlit application screenshot showing chat experience and document context" />
+          <figcaption>
+            Demo RAG V5 Streamlit front-end: tenant-aware document upload and a conversational
+            RAG interface backed by Firestore Vector Search, chat history, and Gemini 2.5 Pro.
+          </figcaption>
+        </figure>
+
+        <h3>Typical User Flow</h3>
+        <ul>
+          <li>Institution uploads a medical textbook or lecture deck into their tenant path.</li>
+          <li>The fan-out pipeline ingests and indexes the content asynchronously.</li>
+          <li>A student opens the demo, selects the same tenant, and asks clinical questions.</li>
+          <li>
+            The system returns grounded answers with source snippets, leveraging both the
+            Parent–Child hierarchy and recent chat history to keep the conversation coherent.
+          </li>
+        </ul>
+
+        <h2>Implementation Highlights</h2>
+        <h3>1. Asynchronous Fan-Out Ingestion</h3>
+        <ul>
+          <li>
+            GCS upload events are translated into a batch of Pub/Sub messages, one per page, to
+            avoid large single-transaction jobs.
+          </li>
+          <li>
+            Cloud Run workers scale horizontally with traffic, keeping ingestion latency bounded
+            even for multi-hundred-page documents.
+          </li>
+        </ul>
+
+        <h3>2. Parent–Child Indexing Strategy</h3>
+        <ul>
+          <li>
+            Parent chunks provide the semantic “canvas” for Gemini, ensuring that responses are
+            grounded in full paragraphs rather than isolated sentences.
+          </li>
+          <li>
+            Child chunks are optimized for vector search accuracy, balancing recall with storage
+            footprint.
+          </li>
+        </ul>
+
+        <h3>3. Storage Decoupling via Dual-Write Worker (V5)</h3>
+        <ul>
+          <li>
+            The worker’s main loop now accumulates Parent/Child metadata and embeddings into a
+            DataFrame, writes them to Firestore in a batch, and then exports the same rows to GCS
+            as Parquet.
+          </li>
+          <li>
+            This enables a smooth V6 migration path where an offline job can build a Vertex AI
+            Vector index from Parquet without re-processing the raw documents.
+          </li>
+        </ul>
+
+        <h3>4. Retrieval API with Memory</h3>
+        <ul>
+          <li>
+            Each session is keyed by <code>session_id</code> and persists the last four turns of user/assistant
+            messages in Firestore for conversational continuity.
+          </li>
+          <li>
+            Vector search is always pre-filtered by <code>client_id</code>, guaranteeing tenant isolation and
+            predictable performance.
+          </li>
+        </ul>
+
+        <h3>5. Streamlit Demo Layer</h3>
+        <ul>
+          <li>
+            The demo uses the same retrieval API and authentication model that a production
+            application would use, making it a realistic sandbox for stakeholders.
+          </li>
+          <li>
+            This front-end also doubles as a test harness for validating ingestion, retrieval,
+            and relevance before shipping additional features.
+          </li>
+        </ul>
+
+        <h2>Impact & What I’d Do Next</h2>
+        <p>
+          By V5, the AI Empower Enterprise RAG Service has moved from a robust prototype into a
+          platform with serious headroom:
+        </p>
+        <ul>
+          <li>
+            <strong>Scalability:</strong> Ingestion is no longer a bottleneck for long textbooks or large tenant
+            libraries.
+          </li>
+          <li>
+            <strong>Cost Control:</strong> Firestore remains the real-time engine, but Parquet archives ensure
+            future vector storage can be optimized without data loss.
+          </li>
+          <li>
+            <strong>Product Readiness:</strong> The demo app provides a concrete, shareable interface that
+            non-technical stakeholders can use to validate the system’s value.
+          </li>
+        </ul>
+
+        <p>
+          If I extended this further into a V6 release, the next steps would be:
+        </p>
+        <ul>
+          <li>
+            Stand up a Vertex AI Vector Search index and a batch “index builder” job that reads from
+            the Parquet archive.
+          </li>
+          <li>
+            Add evaluation tooling (e.g., RAG evaluation harness with labeled queries) to measure
+            retrieval quality across versions.
+          </li>
+          <li>
+            Extend beyond text to support multimodal content (slides + video transcripts) while
+            keeping the same storage and indexing pattern.
+          </li>
+        </ul>
+
+        <h2>Assets</h2>
+        <ul>
+          <li>
+            <strong>GitHub Repository:</strong>
+            <a href="https://github.com/burnsgregm/ai-empower-rag-v5" target="_blank" rel="noopener">
+              github.com/burnsgregm/ai-empower-rag-v5
+            </a>
+          </li>
+          <li>
+            <strong>Live Demo:</strong>
+            <a href="https://demo-rag-v5.streamlit.app/" target="_blank" rel="noopener">
+              demo-rag-v5.streamlit.app
+            </a>
+          </li>
+          <li>
+            <strong>Case Study 1-Pager:</strong>
+            <a href="Burns_Greg_CS_1P_DemoRAG_V5.pdf" target="_blank" rel="noopener">
+              Burns_Greg_CS_1P_DemoRAG_V5.pdf
+            </a>
+          </li>
+          <li>
+            <strong>Workflow Diagram:</strong>
+            <a href="Burns_Greg_CS_DemoRAG_V5.svg" target="_blank" rel="noopener">
+              Burns_Greg_CS_DemoRAG_V5.svg
+            </a>
+          </li>
+        </ul>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
